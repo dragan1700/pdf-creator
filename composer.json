@@ -3,7 +3,6 @@
   "description": "Craft CMS plugin to generate PDF from a collection of pages.",
   "type": "craft-plugin",
   "version": "1.0.8",
-  "prefer-stable": false,
   "keywords": [
     "craft",
     "cms",
@@ -43,6 +42,5 @@
       "pdfCreatorService": "zeixag\\pdfcreator\\services\\PdfCreatorService"
     },
     "class": "zeixag\\pdfcreator\\PdfCreator"
-  },
-  "minimum-stability": "dev"
+  }
 }
