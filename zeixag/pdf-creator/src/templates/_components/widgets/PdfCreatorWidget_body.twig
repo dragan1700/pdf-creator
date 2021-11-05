@@ -1,0 +1,20 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * pdf creator plugin for Craft CMS
+ *
+ * PdfCreatorWidget Widget Body
+ *
+ * @author    Dragan Nikolic
+ * @copyright Copyright (c) 2021 Dragan Nikolic
+ * @link      https://zeix.com/team/dragan-nikolic/
+ * @package   PdfCreator
+ * @since     1.0.0
+ */
+#}
+
+{% set iconUrl = view.getAssetManager().getPublishedUrl('@zeixag/pdfcreator/assetbundles/pdfcreatorwidgetwidget/dist', true) ~ '/img/PdfCreatorWidget-icon.svg' %}
+
+<img src="{{ iconUrl }}" height="64" width="64" />
+
+<p>{{ message }}</p>

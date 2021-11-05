@@ -1,0 +1,464 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * pdf creator plugin for Craft CMS 3.x
+ *
+ * pdf creator index.twig
+ *
+ * @author    Dragan Nikolic
+ * @copyright Copyright (c) 2021 Dragan Nikolic
+ * @link      https://zeix.com/team/dragan-nikolic/
+ * @package   PdfCreator
+ * @since     1.0.0
+ */
+#}
+
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("zeixag\\pdfcreator\\assetbundles\\pdfcreator\\PdfCreatorAsset") %}
+{% do view.registerAssetBundle("zeixag\\pdfcreator\\assetbundles\\indexcpsection\\IndexCPSectionAsset") %}
+
+{# Link for the ? icon at the bottom of the page #}
+{% set docsUrl = "???" %}
+
+{# The title of this CP section #}
+{% set title = "pdf creator" %}
+
+{# The URL to this plugin's base CP section #}
+{% set pluginCpUrl = url('pdf-creator') %}
+
+{# Get a URL to an image in our AssetBundle #}
+{% set iconUrl = view.getAssetManager().getPublishedUrl('@zeixag/pdfcreator/assetbundles/indexcpsection/dist', true) ~ '/img/plugin-logo.png' %}
+{% set loadingImg = view.getAssetManager().getPublishedUrl('@zeixag/pdfcreator/assetbundles/indexcpsection/dist', true) ~ '/img/loading-animation.gif' %}
+{% set dragImg = view.getAssetManager().getPublishedUrl('@zeixag/pdfcreator/assetbundles/indexcpsection/dist', true) ~ '/img/arrows-alt-solid.svg' %}
+{% set trashImg = view.getAssetManager().getPublishedUrl('@zeixag/pdfcreator/assetbundles/indexcpsection/dist', true) ~ '/img/trash-alt-regular.svg' %}
+{% set sortableJs = view.getAssetManager().getPublishedUrl('@zeixag/pdfcreator/assetbundles/indexcpsection/dist', true) ~ '/js/sortable.complete.modular.js' %}
+
+{# Content that should appear in the page header #}
+{% set extraPageHeaderHtml %}
+  <div class="buttons">
+    <a href="{{ pluginCpUrl }}" class="btn submit add icon">{{ "Click Me!"|t('pdf-creator') }}</a>
+  </div>
+{% endset %}
+
+{# The content of the CP Section #}
+{% set content %}
+
+  {# todo: move CSS to separate file #}
+  <style>
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+    .handle-icon {
+      width: 1em;
+      height: 1em;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.5em;
+      position: relative;
+      top: -2px;
+    }
+
+    [id^="site_"] {
+      display: none;
+    }
+
+    .listWrapper {
+      display: flex;
+      justify-content: flex-start;
+      align-items: stretch;
+      align-content: stretch;
+    }
+
+    body.ltr ol {
+      padding-left: 1.8em;
+    }
+
+    .pageList {
+      display: none;
+    }
+
+    .pageList.active {
+      display: block;
+    }
+
+    .handle:hover {
+      cursor: pointer;
+    }
+
+    .handle.selected {
+      background-color: yellow;
+    }
+
+    .listWrapper > div {
+      width: 45%;
+    }
+
+    #trash {
+      min-height: 220px;
+      height: auto;
+    }
+
+    #trashButton {
+      display: block;
+      float: right;
+      margin: 1rem 0;
+      width: 2rem;
+      height: 2rem;
+    }
+
+    #trashButton:hover {
+      cursor: pointer;
+    }
+
+    #trash li {
+      text-decoration: line-through;
+    }
+
+    #getList {
+      display: block;
+      margin: 1em 0;
+    }
+
+    #getList:hover {
+      cursor: pointer;
+    }
+
+    .submit-response-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #feedback {
+      background: transparent;
+      margin: 1em 0;
+      padding: 7px 0;
+    }
+
+  </style>
+
+  <img src="{{ iconUrl }}" width="384" height="139" style="float: right; transform: translate(24px, -24px);"/>
+  <p class="visually-hidden">{{ craft.pdfCreator.getVersion() }}</p>
+
+  <div id="siteList-field" class="field">
+    <div class="heading">
+      <label id="siteList-label" for="siteList">Select Site:</label></div>
+    <div id="siteList-instructions" class="instructions">
+    </div>
+    <div class="input ltr">
+      <div class="select" id="sitesSelectWrapper"></div>
+    </div>
+  </div>
+
+  <div style="margin: 1rem 0;">
+    <h2>Re-arrange the pages via drag and drop:</h2>
+    <div class="listWrapper">
+      <div id="pageListWrapper"></div>
+
+      <div>
+        <h3>Drag pages here to remove from annual report:</h3>
+        <ul id="trash"></ul>
+
+        <button id="trashButton" type="button" value="empty trash">
+          <img src="{{ trashImg }}" alt="empty trash">
+        </button>
+        {# <button id="fromTrash" class="btn submit" type="button">Un-Trash All</button> #}
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <div id="meta" style="margin: 2rem 0;">
+
+    <div class="field">
+      <div class="heading">
+        <label class="required" for="meta-title">Title</label>
+      </div>
+      <div id="meta-title-instructions" class="instructions">
+        <p>The PDF title</p>
+      </div>
+      <div class="input ltr">
+        <input type="text" id="meta-title" name="meta-title" class="text fullwidth" value="Jahresbericht 2020 Zeix AG"
+               autocomplete="off" autocorrect="off" autocapitalize="off"
+               aria-describedby="meta-title-instructions">
+      </div>
+    </div>
+
+
+    <div class="field">
+      <div class="heading">
+        <label class="required" for="meta-author">Author</label>
+      </div>
+      <div id="meta-author-instructions" class="instructions">
+        <p>The PDF author</p>
+      </div>
+      <div class="input ltr">
+        <input type="text" id="meta-author" name="meta-author" class="text fullwidth" value="Zeix AG, 8004 Zürich"
+               autocomplete="off" autocorrect="off" autocapitalize="off"
+               aria-describedby="meta-author-instructions">
+      </div>
+    </div>
+
+
+    <div class="field">
+      <div class="heading">
+        <label class="required" for="meta-subject">Subject</label>
+      </div>
+      <div id="meta-subject-instructions" class="instructions">
+        <p>The PDF subject</p>
+      </div>
+      <div class="input ltr">
+        <input type="text" id="meta-subject" name="meta-subject" class="text fullwidth"
+               value="Jahresbericht Zeix AG 2020"
+               autocomplete="off" autocorrect="off" autocapitalize="off"
+               aria-describedby="meta-subject-instructions">
+      </div>
+    </div>
+
+
+    <div class="field">
+      <div class="heading">
+        <label class="required" for="meta-keywords">Keywords</label>
+      </div>
+      <div id="meta-keywords-instructions" class="instructions">
+        <p>The PDF keywords</p>
+      </div>
+      <div class="input ltr">
+        <input type="text" id="meta-keywords" name="meta-keywords" class="text fullwidth"
+               value="Jahresbericht, Zeix, Finanzen, Bilanz, Geschäftsbericht"
+               autocomplete="off" autocorrect="off" autocapitalize="off"
+               aria-describedby="meta-keywords-instructions">
+      </div>
+    </div>
+
+
+    <div class="field">
+      <div class="heading">
+        <label class="required" for="file-name">File Name</label>
+      </div>
+      <div id="file-name-instructions" class="instructions">
+        <p>The PDF file name (without .pdf suffix)<br>No whitespace or umlauts allowed.</p>
+      </div>
+      <div class="input ltr">
+        <input type="text" id="file-name" name="file-name" class="text fullwidth"
+               value="Jahresbericht_2020_Zeix"
+               autocomplete="off" autocorrect="off" autocapitalize="off"
+               aria-describedby="file-name-instructions">
+      </div>
+    </div>
+
+  </div>
+
+  <hr>
+
+  <div class="submit-response-container">
+    <button id="getList" class="btn submit" type="button">Generate PDF</button>
+    <div id="feedback"></div>
+  </div>
+
+  {# todo: move to separate file #}
+  <script type="module">
+    {# todo: check if we can work with core js only #}
+    import Sortable from '{{ sortableJs }}';
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+      const sortable = new Sortable(document.querySelector('.pageList.active'), {
+        group: 'shared',
+        handle: '.handle',
+        animation: 150,
+        multiDrag: true, // Enable multi-drag
+        selectedClass: 'selected', // The class applied to the selected items
+        fallbackTolerance: 3, // So that we can select items on mobile
+      });
+
+      const sortable2 = new Sortable(trash, {
+        group: 'shared',
+        handle: '.handle',
+        animation: 150,
+        multiDrag: true, // Enable multi-drag
+        selectedClass: 'selected', // The class applied to the selected items
+        fallbackTolerance: 3, // So that we can select items on mobile
+      });
+
+
+      document.addEventListener('input', function (event) {
+        if (event.target.id !== 'siteList') return;
+
+        const sortable = new Sortable(document.querySelector('.pageList.active'), {
+          group: 'shared',
+          handle: '.handle',
+          animation: 150,
+          multiDrag: true, // Enable multi-drag
+          selectedClass: 'selected', // The class applied to the selected items
+          fallbackTolerance: 3, // So that we can select items on mobile
+        });
+
+        const sortable2 = new Sortable(trash, {
+          group: 'shared',
+          handle: '.handle',
+          animation: 150,
+          multiDrag: true, // Enable multi-drag
+          selectedClass: 'selected', // The class applied to the selected items
+          fallbackTolerance: 3, // So that we can select items on mobile
+        });
+
+      });
+
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+      const csrfTokenName = "{{ craft.app.config.general.csrfTokenName|e('js') }}";
+      const csrfTokenValue = "{{ craft.app.request.csrfToken|e('js') }}";
+
+      console.log(csrfTokenName);
+      console.log(csrfTokenValue);
+
+      const currentPageList = document.querySelector('.pageList.active');
+      const trash = document.getElementById('trash');
+      const f = document.getElementById('f');
+      const button = document.getElementById('getList');
+      const trashButton = document.getElementById('trashButton');
+
+      {% set currentYear = now.year %}
+      {% set sites = craft.app.sites.allSites %}
+
+      let sitesOptions = `
+        {% for site in sites %}
+            {% if site.handle !='default' %}
+              {% if site.handle|slice(-4) == currentYear %}
+<option value="{{ site.id }}" selected="selected">{{ site }}</option>
+              {% else %}
+<option value="{{ site.id }}">{{ site }}</option>
+              {% endif %}
+            {% endif %}
+        {% endfor %}`;
+
+      const sitesSelect = `
+<select id="siteList" aria-describedby="siteList-instructions">
+  ${sitesOptions}
+</select>`;
+
+      // console.log(sitesSelect);
+      document.getElementById('sitesSelectWrapper').innerHTML = sitesSelect;
+
+      let pagesList = ''; // only li items
+
+      {% for site in sites %}
+      {% if site.handle != "default" %}
+      {% set id = site.id %}
+      {% set handleYear = site.handle|slice(-4) %}
+      pagesList += `<ol class="pageList" data-site-id="{{ id }}" data-year="{{ handleYear }}">`;
+      {% set myPages = craft.entries.siteId(id).anyStatus().limit(99).all() %}
+      {% for li in myPages %}
+      pagesList += `<li class="handle">`;
+      pagesList += `<img src="{{ dragImg }}" class="handle-icon" alt="" aria-hidden="true">`;
+      pagesList += `{{ li.title }} <a href="{{ li.url }}" target="_blank" rel="noopener">(visit)</a>`;
+      pagesList += `</li>`;
+      {% endfor %}
+      pagesList += `</ol>`;
+      {% endif %}
+      {% endfor %}
+
+      document.getElementById('pageListWrapper').innerHTML = pagesList;
+
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      document.querySelector(`[data-year="${currentYear}"]`).classList.add('active');
+
+      // site list switcher:
+      document.addEventListener('input', function (event) {
+        if (event.target.id !== 'siteList') return;
+        trash.innerHTML = '';
+        let siteId = event.target.value;
+        const allSiteContainers = document.querySelectorAll('.pageList');
+        Array.from(allSiteContainers).forEach((item) => {
+          item.classList.remove('active');
+        })
+        let currPageList = document.querySelector(`[data-site-id="${siteId}"]`);
+        currPageList.classList.add('active')
+      }, false);
+
+      trashButton.addEventListener('click', event => {
+        trash.innerHTML = '';
+      });
+
+      // send data to PDF-creation script:
+      button.addEventListener('click', event => {
+        spinner();
+        const currentPageList = document.querySelector('.pageList.active');
+        const newList = currentPageList.children;
+        let ar = [];
+        Array.from(newList).forEach((item) => {
+          let url = item.querySelector('a').attributes.href.value;
+          ar.push(url);
+        })
+
+        const pageSelection = JSON.stringify(ar);
+        const target = 'actions/pdf-creator/default/get-page-selection';
+
+        const metaTitle = document.getElementById('meta-title').value;
+        const metaAuthor = document.getElementById('meta-author').value;
+        const metaSubject = document.getElementById('meta-subject').value;
+        const metaKeywords = document.getElementById('meta-keywords').value;
+        const fileName = document.getElementById('file-name').value;
+
+        let data = {};
+        data[csrfTokenName] = csrfTokenValue;
+        data["pageSelection"] = ar;
+        data["metaTitle"] = metaTitle;
+        data["metaAuthor"] = metaAuthor;
+        data["metaSubject"] = metaSubject;
+        data["metaKeywords"] = metaKeywords;
+        data["fileName"] = fileName;
+
+        console.log(data);
+        const d = JSON.stringify(data);
+
+        fetch(target, {
+          headers: {
+            "Accept": "application/json",
+            "payload": pageSelection, // just as an alternative; send data in header instead of body
+          },
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-cache',
+          credentials: 'same-origin',
+          referrerPolicy: 'no-referrer',
+          body: d
+        })
+          .then(response => response.json())
+          .then(response => feedback(response))
+
+      });
+
+      function spinner() {
+        document.getElementById('feedback').innerHTML = `<img src="{{ loadingImg }}" alt="generating PDF for you... please be patient">`;
+      }
+
+      function feedback(res) {
+        let feedbackStr = "";
+        if (res["status"] === "ok") {
+          const pdf = res["pdf"];
+          const html = res["html"];
+          const reportPath = res['reportPath']; // only for debugging
+          const reportUrl = res['reportUrl']; // only for debugging
+          feedbackStr += "<p><strong>PDF successfully generated: </strong>";
+          feedbackStr += `<a href="${pdf}" target="_blank">PDF</a> / `;
+          feedbackStr += `<a href="${html}" target="_blank">HTML</a></p>`;
+          document.getElementById('feedback').innerHTML = feedbackStr;
+        } else {
+          document.getElementById('feedback').innerHTML = `<p><strong>Error: status: ${res["status"]}</strong></p>`;
+        }
+      }
+
+    });
+
+  </script>
+
+{% endset %}

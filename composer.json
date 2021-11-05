@@ -1,0 +1,46 @@
+{
+  "name": "zeixag/pdf-creator",
+  "description": "Craft CMS plugin to generate PDF from a collection of pages.",
+  "type": "craft-plugin",
+  "version": "1.0.8",
+  "keywords": [
+    "craft",
+    "cms",
+    "craftcms",
+    "craft-plugin",
+    "pdf creator"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Dragan Nikolic",
+      "homepage": "https://zeix.com/team/dragan-nikolic/",
+      "email": "dragan.nikolic@zeix.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "craftcms/cms": "^3.0.0",
+    "php": ">=7",
+    "ext-json": "*",
+    "ext-curl": "*",
+    "composer/installers": "~2.0",
+    "mpdf/mpdf": "~8.0",
+    "ivopetkov/html5-dom-document-php": "^2"
+  },
+  "autoload": {
+    "psr-4": {
+      "zeixag\\pdfcreator\\": "src/"
+    }
+  },
+  "extra": {
+    "name": "pdf creator",
+    "handle": "pdf-creator",
+    "developer": "Dragan Nikolic",
+    "developerUrl": "https://zeix.com/team/dragan-nikolic/",
+    "components": {
+      "pdfCreatorService": "zeixag\\pdfcreator\\services\\PdfCreatorService"
+    },
+    "class": "zeixag\\pdfcreator\\PdfCreator"
+  }
+}

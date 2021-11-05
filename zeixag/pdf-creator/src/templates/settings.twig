@@ -1,0 +1,26 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * pdf creator plugin for Craft CMS 3.x
+ *
+ * pdf creator Settings.twig
+ *
+ * @author    Dragan Nikolic
+ * @copyright Copyright (c) 2021 Dragan Nikolic
+ * @link      https://zeix.com/team/dragan-nikolic/
+ * @package   PdfCreator
+ * @since     1.0.0
+ */
+#}
+
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("zeixag\\pdfcreator\\assetbundles\\pdfcreator\\PdfCreatorAsset") %}
+
+{{ forms.textField({
+    label: 'Some Field',
+    instructions: 'Enter some setting here.',
+    id: 'someAttribute',
+    name: 'someAttribute',
+    value: settings['someAttribute']})
+}}
