@@ -42,5 +42,6 @@
       "pdfCreatorService": "zeixag\\pdfcreator\\services\\PdfCreatorService"
     },
     "class": "zeixag\\pdfcreator\\PdfCreator"
-  }
+  },
+  "minimum-stability": "dev"
 }
